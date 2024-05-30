@@ -1,36 +1,17 @@
 import streamlit as st
-import requests
-import json
+from disai.disai_jazz import Agent, Task, Mistral, SequentialFlow, InputType, OutputType
 
 
+#Define agent properties
+expertise = "Webagent"
+task = Task("Search web and answer accordingly")
+input_type = InputType("Text")
+output_type = OutputType("Text")
+agent = Agent(expertise, task, input_type, output_type)
+chat_history=[]
+model = Mistral(chat_history=chat_history)
+sequential_flow = SequentialFlow(agent, model)
 st.title("Mistral")
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
-# Function to stream responses from the Mistral model
-def stream_mistral_response():
-    url = "http://localhost:11434/api/chat"
-    payload = {"model": "mistral", "messages": st.session_state.chat_history}
-    headers = {"Content-Type": "application/json"}
-
-    response = requests.post(url, json=payload, headers=headers, stream=True)
-
-    if response.status_code == 200:
-        content = ""
-        total = " "
-        for line in response.iter_lines():
-            if line:
-                line_data = json.loads(line.decode('utf-8'))
-                content = line_data.get("message", {}).get("content", "")
-                total+=content
-                yield content
-        st.session_state.chat_history.append({
-            "role": "assistant",
-            "content": total
-        })
-
-    else:
-        st.error("Error: " + str(response.status_code))
 
 
 if "messages" not in st.session_state:
@@ -42,10 +23,9 @@ for msg in st.session_state.messages:
 if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
-    st.session_state.chat_history.append({
-      "role": "user",
-      "content": prompt
-    })
+    with st.spinner("Browsing the web..."):
+        context=sequential_flow.mistral_context(prompt)
     with st.chat_message("assistant"):
-        response = st.write_stream(stream_mistral_response())
+        response = st.write_stream(sequential_flow.mistral_webagent(user_prompt=prompt,search_context=context))
     st.session_state.messages.append({"role": "assistant", "content": response})
+    #st.write(response)
