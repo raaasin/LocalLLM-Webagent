@@ -2,7 +2,6 @@ import streamlit as st
 from disai.disai_jazz import Agent, Task, Mistral, SequentialFlow, InputType, OutputType
 
 
-
 #Define agent properties
 expertise = "Webagent"
 task = Task("Search web and answer accordingly")
@@ -29,3 +28,4 @@ if prompt := st.chat_input():
     with st.chat_message("assistant"):
         response = st.write_stream(sequential_flow.mistral_webagent(user_prompt=prompt,search_context=context))
     st.session_state.messages.append({"role": "assistant", "content": response})
+    #st.write(response)
