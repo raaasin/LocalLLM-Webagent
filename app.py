@@ -24,7 +24,7 @@ if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
     with st.spinner("Browsing the web..."):
-        context=sequential_flow.mistral_context(prompt)
+        context=sequential_flow.mistral_duckduckgo(prompt)
     with st.chat_message("assistant"):
         response = st.write_stream(sequential_flow.mistral_webagent(user_prompt=prompt,search_context=context))
     st.session_state.messages.append({"role": "assistant", "content": response})
